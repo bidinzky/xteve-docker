@@ -1,9 +1,17 @@
+FROM golang:1.16-alpine as build
+WORKDIR /app
+RUN wget https://github.com/bidinzky/xTeVe/archive/refs/heads/master.zip -O temp.zip; unzip temp.zip;mv xTeVe-master/* /app; rm -r temp.zip xTeVe-master
+RUN go get github.com/koron/go-ssdp
+RUN go get github.com/gorilla/websocket
+RUN go get github.com/kardianos/osext
+RUN go build xteve.go
+
 FROM alpine:latest
 RUN apk update
 RUN apk upgrade
 RUN apk add --no-cache ca-certificates
 
-MAINTAINER alturismo alturismo@gmail.com
+#MAINTAINER alturismo alturismo@gmail.com
 
 # Extras
 RUN apk add --no-cache curl
@@ -27,7 +35,7 @@ RUN apk add vlc
 RUN sed -i 's/geteuid/getppid/' /usr/bin/vlc
 
 # Add xTeve and guide2go
-RUN wget https://github.com/xteve-project/xTeVe-Downloads/raw/master/xteve_linux_amd64.zip -O temp.zip; unzip temp.zip -d /usr/bin/; rm temp.zip
+COPY --from=build /app/xteve /usr/bin/xteve
 ADD cronjob.sh /
 ADD entrypoint.sh /
 ADD sample_cron.txt /
